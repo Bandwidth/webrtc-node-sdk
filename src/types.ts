@@ -61,6 +61,7 @@ export interface RtcAuthParams {
 export interface RtcOptions {
   websocketUrl?: string;
   sipDestination?: string;
+  eventFilter?: string;
 }
 
 export class WebsocketDisconnectedError extends Error {
