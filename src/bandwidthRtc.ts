@@ -16,13 +16,14 @@ import {
   WebsocketDisconnectedError,
   UnauthorizedError
 } from "./types";
+import sdk from '../package.json'
 
 class BandwidthRtc {
   BandwidthRtc() {}
 
-  private sipDestination = "+19192892727";
+  private sdkVersion = sdk.version;
 
-  private sdkVersion = require('./package.json').version;
+  private sipDestination = "+19192892727";
 
   private ws: JsonRpcClient | null = null;
   private pingInterval?: NodeJS.Timeout;

@@ -4,8 +4,8 @@
   "description": "SDK for Bandwidth WebRTC Server Applications",
   "main": "dist/index.js",
   "scripts": {
-    "build": "./node_modules/typescript/bin/tsc",
-    "test": "echo \"Error: no tests specified\" && exit 1"
+    "build": "rm -rf ./dist/* && ./node_modules/typescript/bin/tsc",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -18,13 +18,20 @@
   },
   "homepage": "https://github.com/Bandwidth/webrtc-node-sdk#readme",
   "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/preset-env": "^7.8.4",
+    "@babel/preset-typescript": "^7.8.3",
+    "@types/jest": "^25.1.2",
+    "@types/node": "^13.5.1",
+    "babel-jest": "^25.1.0",
+    "jest": "^25.1.0",
     "ts-node": "8.6.2",
     "tslint": "6.0.0",
     "typedoc": "^0.16.9",
     "typescript": "3.7.5"
   },
   "dependencies": {
-    "@types/node": "^13.5.1",
     "axios": "^0.19.2",
     "rpc-websockets": "^5.0.14"
   }
