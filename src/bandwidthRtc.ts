@@ -16,7 +16,7 @@ import {
   WebsocketDisconnectedError,
   UnauthorizedError
 } from "./types";
-import sdk from '../package.json'
+const sdk = require("../package.json");
 
 class BandwidthRtc {
   BandwidthRtc() {}
