@@ -16,10 +16,15 @@ import {
   WebsocketDisconnectedError,
   UnauthorizedError
 } from "./types";
+const sdk = require("../package.json");
 
 class BandwidthRtc {
   BandwidthRtc() {}
+
+  private sdkVersion = sdk.version;
+
   private sipDestination = "+19192892727";
+
   private ws: JsonRpcClient | null = null;
   private pingInterval?: NodeJS.Timeout;
   private authToken: string | null = null;
@@ -27,21 +32,13 @@ class BandwidthRtc {
   private reconnectMillis: number = 0;
   private lastConnectionFailed: boolean = false;
 
-  private participantJoinedHandler?: { (event: ParticipantJoinedEvent): void };
-  private participantPublishedHandler?: {
-    (event: ParticipantPublishedEvent): void;
-  };
-  private participantUnpublishedHandler?: {
-    (event: ParticipantUnpublishedEvent): void;
-  };
+  private participantJoinedHandler?: { (event: ParticipantJoinedEvent): void; };
+  private participantPublishedHandler?: { (event: ParticipantPublishedEvent): void; };
+  private participantUnpublishedHandler?: { (event: ParticipantUnpublishedEvent): void; };
   private participantLeftHandler?: { (event: ParticipantLeftEvent): void };
-  private subscribeSucceededHandler?: {
-    (event: SubscribeSucceededEvent): void;
-  };
+  private participantUnsubscribedHandler?: { (event: ParticipantUnsubscribedEvent): void; };
+  private subscribeSucceededHandler?: { (event: SubscribeSucceededEvent): void; };
   private subscribeFailedHandler?: { (event: SubscribeFailedEvent): void };
-  private participantUnsubscribedHandler?: {
-    (event: ParticipantUnsubscribedEvent): void;
-  };
 
   connect(authParams: RtcAuthParams, options?: RtcOptions): Promise<void> {
     // default options
@@ -55,15 +52,13 @@ class BandwidthRtc {
       rtcOptions = { ...rtcOptions, ...options };
     }
 
+    // update the sipDestination field with any override value
     this.sipDestination = rtcOptions.sipDestination;
 
     return this._connect(authParams, rtcOptions);
   }
 
-  private _connect(
-    authParams: RtcAuthParams,
-    rtcOptions: RtcOptions
-  ): Promise<void> {
+  private _connect(authParams: RtcAuthParams, rtcOptions: RtcOptions): Promise<void> {
     return new Promise(async (resolve, reject) => {
       const sleep = (millis: number) => {
         return new Promise(resolve => {
@@ -111,9 +106,13 @@ class BandwidthRtc {
           return reject(new UnauthorizedError(errorMessage));
         }
       }
-      const websocketUrl = `${rtcOptions.websocketUrl}/v1/?at=c&auth=${this.authToken}&accountId=${authParams.accountId}`;
 
-      const ws = new JsonRpcClient(websocketUrl, {
+      let websocketUrlWithQuery = `${rtcOptions.websocketUrl}/v1/?at=c&auth=${this.authToken}&accountId=${authParams.accountId}`;
+      if (rtcOptions.eventFilter) {
+        websocketUrlWithQuery += `&eventFilter=${rtcOptions.eventFilter}`;
+      }
+      websocketUrlWithQuery += `&sdkVersion=${this.sdkVersion}`;
+      const ws = new JsonRpcClient(websocketUrlWithQuery, {
         autoconnect: false,
         reconnect: false
       });
@@ -131,23 +130,23 @@ class BandwidthRtc {
         }
       });
 
-      ws.addListener(
-        "participantPublished",
-        (event: ParticipantPublishedEvent) => {
-          if (this.participantPublishedHandler) {
-            this.participantPublishedHandler(event);
-          }
+      ws.addListener("participantPublished", (event: ParticipantPublishedEvent) => {
+        if (this.participantPublishedHandler) {
+          this.participantPublishedHandler(event);
         }
-      );
+      });
 
-      ws.addListener(
-        "participantUnpublished",
-        (event: ParticipantUnpublishedEvent) => {
-          if (this.participantUnpublishedHandler) {
-            this.participantUnpublishedHandler(event);
-          }
+      ws.addListener("participantUnpublished", (event: ParticipantUnpublishedEvent) => {
+        if (this.participantUnpublishedHandler) {
+          this.participantUnpublishedHandler(event);
         }
-      );
+      });
+
+      ws.addListener("participantUnsubscribed", (event: ParticipantUnsubscribedEvent) => {
+        if (this.participantUnsubscribedHandler) {
+          this.participantUnsubscribedHandler(event);
+        }
+      });
 
       ws.addListener("subscribeSucceeded", (event: SubscribeSucceededEvent) => {
         if (this.subscribeSucceededHandler) {
@@ -196,7 +195,6 @@ class BandwidthRtc {
         if (this.pingInterval) {
           clearInterval(this.pingInterval);
         }
-
         if (code !== 1000) {
           console.log(`Websocket closed, code: ${code}`);
           waitAndReconnect();
@@ -228,10 +226,7 @@ class BandwidthRtc {
 
   async startConference(): Promise<string> {
     if (this.ws) {
-      let response = (await this.ws.call(
-        "startConference",
-        {}
-      )) as StartConferenceResponse;
+      let response = (await this.ws.call("startConference", {})) as StartConferenceResponse;
       return response.conferenceId;
     } else {
       throw new WebsocketDisconnectedError();
@@ -248,10 +243,7 @@ class BandwidthRtc {
     }
   }
 
-  async createParticipant(
-    conferenceId: string,
-    roles?: Set<string>
-  ): Promise<string> {
+  async createParticipant(conferenceId: string, roles?: Set<string>): Promise<string> {
     if (this.ws) {
       let params: CreateParticipantRequest = {
         conferenceId: conferenceId
@@ -259,8 +251,7 @@ class BandwidthRtc {
       if (roles) {
         params.roles = roles;
       }
-      let response = (await this.ws.call(
-        "createParticipant",
+      let response = (await this.ws.call("createParticipant",
         params
       )) as CreateParticipantResponse;
       return response.participantId;
@@ -269,10 +260,7 @@ class BandwidthRtc {
     }
   }
 
-  async removeParticipant(
-    conferenceId: string,
-    participantId: string
-  ): Promise<void> {
+  async removeParticipant(conferenceId: string, participantId: string): Promise<void> {
     if (this.ws) {
       await this.ws.call("removeParticipant", {
         conferenceId: conferenceId,
@@ -283,11 +271,7 @@ class BandwidthRtc {
     }
   }
 
-  async subscribe(
-    conferenceId: string,
-    participantId: string,
-    streamId: string
-  ) {
+  async subscribe(conferenceId: string, participantId: string, streamId: string): Promise<void> {
     if (this.ws) {
       await this.ws.call("subscribeParticipant", {
         conferenceId: conferenceId,
@@ -299,11 +283,7 @@ class BandwidthRtc {
     }
   }
 
-  async unsubscribe(
-    conferenceId: string,
-    participantId: string,
-    streamId: string
-  ): Promise<void> {
+  async unsubscribe(conferenceId: string, participantId: string, streamId: string): Promise<void> {
     if (this.ws) {
       await this.ws.call("unsubscribeParticipant", {
         conferenceId: conferenceId,
@@ -315,11 +295,7 @@ class BandwidthRtc {
     }
   }
 
-  async unpublish(
-    conferenceId: string,
-    participantId: string,
-    streamId: string
-  ): Promise<void> {
+  async unpublish(conferenceId: string, participantId: string, streamId: string): Promise<void> {
     if (this.ws) {
       await this.ws.call("unpublish", {
         conferenceId: conferenceId,
@@ -337,7 +313,9 @@ class BandwidthRtc {
     this.participantJoinedHandler = callback;
   }
 
-  onParticipantLeft(callback: { (event: ParticipantLeftEvent): void }): void {
+  onParticipantLeft(callback: {
+    (event: ParticipantLeftEvent): void;
+  }): void {
     this.participantLeftHandler = callback;
   }
 
@@ -359,7 +337,9 @@ class BandwidthRtc {
     this.subscribeSucceededHandler = callback;
   }
 
-  onSubscribeFailed(callback: { (event: SubscribeFailedEvent): void }): void {
+  onSubscribeFailed(callback: {
+    (event: SubscribeFailedEvent): void;
+  }): void {
     this.subscribeFailedHandler = callback;
   }
 
