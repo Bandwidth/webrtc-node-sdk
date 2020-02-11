@@ -1,6 +1,6 @@
 {
   "name": "@bandwidth/webrtc-node-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SDK for Bandwidth WebRTC Server Applications",
   "main": "dist/index.js",
   "scripts": {
