@@ -217,7 +217,7 @@ class BandwidthRtc {
       headers: {
         Authorization: "Basic " + encodedBasicCredential,
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": `WebRTC Node SDK/${this.sdkVersion}`
+        "User-Agent": `Bandwidth WebRTC Node SDK/${this.sdkVersion}`
       },
       data: "grant_type=client_credentials&scope="
     });
