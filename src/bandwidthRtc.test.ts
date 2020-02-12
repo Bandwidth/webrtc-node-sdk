@@ -3,7 +3,7 @@ import { RtcAuthParams, RtcOptions } from './types';
 
 test('sdk version', () => {
     const bandwidthRtc = new BandwidthRtc();
-    expect(bandwidthRtc.sdkVersion).toBe('1.0.1');
+    expect(bandwidthRtc.sdkVersion).toBe('1.0.2');
 });
 
 test('connect method with minimum required inputs', () => {

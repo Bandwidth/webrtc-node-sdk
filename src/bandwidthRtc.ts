@@ -215,8 +215,9 @@ class BandwidthRtc {
       url: "https://id.bandwidth.com/api/v1/oauth2/token",
       method: "POST",
       headers: {
+        Authorization: "Basic " + encodedBasicCredential,
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: "Basic " + encodedBasicCredential
+        "User-Agent": `WebRTC Node SDK/${this.sdkVersion}`
       },
       data: "grant_type=client_credentials&scope="
     });
