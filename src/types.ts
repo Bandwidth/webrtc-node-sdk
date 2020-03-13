@@ -10,6 +10,7 @@ export interface CreateParticipantRequest {
 export interface CreateParticipantResponse {
   conferenceId: string;
   participantId: string;
+  deviceToken: string;
 }
 
 export interface ParticipantJoinedEvent {

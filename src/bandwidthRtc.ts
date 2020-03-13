@@ -244,7 +244,7 @@ class BandwidthRtc {
     }
   }
 
-  async createParticipant(conferenceId: string, roles?: Set<string>): Promise<string> {
+  async createParticipant(conferenceId: string, roles?: Set<string>): Promise<[string, string]> {
     if (this.ws) {
       let params: CreateParticipantRequest = {
         conferenceId: conferenceId
@@ -255,7 +255,7 @@ class BandwidthRtc {
       let response = (await this.ws.call("createParticipant",
         params
       )) as CreateParticipantResponse;
-      return response.participantId;
+      return [response.participantId, response.deviceToken];
     } else {
       throw new WebsocketDisconnectedError();
     }
