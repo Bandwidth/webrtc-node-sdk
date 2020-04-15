@@ -48,3 +48,17 @@ test('connect method with maximum allowed inputs', () => {
         sipDestination: 'someothersiptarget'
     });
 });
+
+test('create participant method', () => {
+    const bandwidthRtc = new BandwidthRtc();
+    bandwidthRtc.createParticipant = jest.fn();
+    bandwidthRtc.createParticipant({
+        conferenceId: '123456',
+        roles: ['audio', 'video']
+    });
+    expect(bandwidthRtc.createParticipant).toBeCalledTimes(1);
+    expect(bandwidthRtc.createParticipant).toBeCalledWith({
+        conferenceId: '123456',
+        roles: ['audio', 'video']
+    });
+});
